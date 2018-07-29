@@ -24,6 +24,8 @@ let portrait = false;
 if (x < y) {
   portrait = true;
 }
+if (portrait) webkitRequestFullscreen();
+
 let touchx = 0;
 let mobileButtons = [
   [canv.width - 60, canv.height - 60, 30],
