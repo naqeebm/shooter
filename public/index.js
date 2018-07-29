@@ -1,7 +1,7 @@
 // console.log('connecting to server http://localhost:8080');
 // const server = io.connect('http://localhost:8080');
-// console.log('connecting to server http://192.168.0.48:8080');
-// const server = io.connect('http://192.168.0.48:8080');
+// console.log('connecting to server http://192.168.0.48:8000');
+// const server = io.connect('http://192.168.0.48:8000');
 console.log('connecting to server http://178.128.45.249:8000');
 const server = io.connect('http://178.128.45.249:8000');
 
@@ -19,6 +19,10 @@ let scale = 0.5;
 
 let x = canv.width / 2;
 let y = canv.height / 2;
+let portrait = false;
+if (x < y) {
+  portrait = true;
+}
 let speed = 4;
 let rotSpeed = 0;
 let rot = 0;
@@ -52,34 +56,48 @@ const ROTSPEED_FACTOR = 25;
 
 let back = [];
 
-ctx.fillStyle = 'white';
-const controls = [
-  'w -          shoot',
-  'a -           turn left',
-  'd -           turn right',
-  'space -   boost',
-  'z -           zoom'
-];
-ctx.font = '36px arial';
-ctx.fillStyle = 'cyan';
-for (let i = controls.length - 1; i > -1; i--) {
-  ctx.fillText(
-    controls[i],
-    canv.width / 2 - 380,
-    canv.height / 2 + 50 + i * 40
-  );
-}
-ctx.fillStyle = 'yellow';
-ctx.font = '76px arial';
-ctx.fillText('Press x to start!', canv.width / 2 - 400, canv.height / 2);
+drawControls();
 
-ctx.font = '40px arial';
-ctx.fillStyle = 'red';
-ctx.fillText(
-  'Connecting to server...',
-  canv.width / 2 - 200,
-  canv.height / 2 - 200
-);
+function drawControls() {
+  ctx.fillStyle = 'white';
+  const controls = [];
+  if (portrait) {
+    console.log('portrait');
+    ctx.font = '12px arial';
+    ctx.fillStyle = 'cyan';
+    for (let i = controls.length - 1; i > -1; i--) {
+      ctx.fillText(controls[i], 50, 50 + i * 20);
+    }
+    ctx.fillStyle = 'white';
+    ctx.font = '32px arial';
+    ctx.fillText('Tap to start!', 50, canv.height / 2);
+
+    ctx.font = '16px arial';
+    ctx.fillStyle = 'red';
+    ctx.fillText('Connecting to server...', 25, 25);
+  } else {
+    ctx.font = '36px arial';
+    ctx.fillStyle = 'cyan';
+    for (let i = controls.length - 1; i > -1; i--) {
+      ctx.fillText(
+        controls[i],
+        canv.width / 2 - 380,
+        canv.height / 2 + 50 + i * 40
+      );
+    }
+    ctx.fillStyle = 'yellow';
+    ctx.font = '76px arial';
+    ctx.fillText('Press x to start!', canv.width / 2 - 400, canv.height / 2);
+
+    ctx.font = '40px arial';
+    ctx.fillStyle = 'red';
+    ctx.fillText(
+      'Connecting to server...',
+      canv.width / 2 - 200,
+      canv.height / 2 - 200
+    );
+  }
+}
 
 function checkProx(x, y, x1, y1, leeway) {
   len = Math.sqrt(Math.pow(x - x1, 2) + Math.pow(y - y1, 2));
@@ -431,9 +449,9 @@ server.on('acceptcon', data => {
   }
 
   ctx.fillStyle = 'rgba(0,0,0,0.8)';
-  ctx.fillRect(400, 0, canv.width, 100);
+  ctx.fillRect(0, 0, canv.width, 50);
   ctx.fillStyle = 'green';
-  ctx.fillText('Connected!', canv.width / 2 - 200, canv.height / 2 - 200);
+  ctx.fillText('Connected!', 25, 50);
 });
 
 server.on('time', data => {
@@ -506,6 +524,27 @@ server.on('dmg', attacker => {
 });
 
 server.on('bullets', data => (otherBullets = data.filter(d => d.id !== id)));
+
+window.addEventListener('touchstart', e => {
+  console.log(e.changedTouches[0]);
+  if (timer === null && id !== null && FPS !== null) {
+    server.emit('ack', {
+      id,
+      x,
+      y,
+      rot,
+      rotSpeed,
+      health,
+      shield,
+      boost,
+      col: SHIP_COLOUR
+    });
+    timer = setInterval(() => {
+      timerLoop();
+    }, 1000 / FPS);
+    console.log('started');
+  }
+});
 
 window.addEventListener('keydown', e => {
   switch (e.key) {
