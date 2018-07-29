@@ -2,8 +2,8 @@
 // const server = io.connect('http://localhost:8080');
 // console.log('connecting to server http://192.168.0.48:8080');
 // const server = io.connect('http://192.168.0.48:8080');
-console.log('connecting to server http://178.128.45.249:8080');
-const server = io.connect('http://178.128.45.249:8080');
+console.log('connecting to server http://178.128.45.249:8000');
+const server = io.connect('http://178.128.45.249:8000');
 
 const canv = document.getElementById('canv');
 const ctx = canv.getContext('2d');

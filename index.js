@@ -3,7 +3,7 @@ var socket = require('socket.io');
 
 var app = express();
 var server = app.listen(8080, () => {
-  console.log('listening on port 8080');
+  console.log('listening on port 8000');
 });
 
 app.use(express.static('public'));
