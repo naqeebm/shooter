@@ -19,10 +19,18 @@ let scale = 0.5;
 
 let x = canv.width / 2;
 let y = canv.height / 2;
+
 let portrait = false;
 if (x < y) {
   portrait = true;
 }
+let touchx = 0;
+let mobileButtons = [
+  [canv.width - 60, canv.height - 60, 30],
+  [110, canv.height - 60, 20],
+  [60, canv.height - 60, 20]
+];
+
 let speed = 4;
 let rotSpeed = 0;
 let rot = 0;
@@ -50,7 +58,7 @@ let dmg = [];
 const BULLET_RADIUS = 2;
 const BULLET_SPEED = 40;
 const BULLET_STROKE = 'blue';
-const MAX_BULLETS = 32;
+const MAX_BULLETS = 4;
 let MAPSIZE = null;
 const ROTSPEED_FACTOR = 25;
 
@@ -62,7 +70,6 @@ function drawControls() {
   ctx.fillStyle = 'white';
   const controls = [];
   if (portrait) {
-    console.log('portrait');
     ctx.font = '12px arial';
     ctx.fillStyle = 'cyan';
     for (let i = controls.length - 1; i > -1; i--) {
@@ -154,6 +161,7 @@ function timerLoop() {
       dmg[i].val -= 4;
     }
   }
+
   dmg = dmg.filter(dm => dm.val > 0);
 
   ctx.strokeStyle = 'rgba(255,255,255,0.4)';
@@ -162,6 +170,8 @@ function timerLoop() {
 
   ctx.scale(1 / scale, 1 / scale);
   ctx.translate(-(canv.width / 2 - x * scale), -(canv.height / 2 - y * scale));
+
+  if (portrait) drawMobileControls();
 
   rot += rotSpeed / ROTSPEED_FACTOR;
   rot = (rot + 2 * Math.PI) % (2 * Math.PI);
@@ -382,6 +392,29 @@ function drawDmg(x, y, dmg) {
     offset + dmg.val / 10
   );
 }
+function drawMobileControls() {
+  strokeCircle(canv.width - 60, canv.height - 60, 30, 1, 'grey', 5);
+  strokeCircle(
+    canv.width - 60 + touchx,
+    canv.height - 60,
+    20,
+    1,
+    'lightgrey',
+    5
+  );
+  strokeCircle(60, canv.height - 60, 20, 1, 'lightgrey', 5);
+  strokeCircle(110, canv.height - 60, 20, 1, 'lightgrey', 5);
+  ctx.fillStyle = 'white';
+  ctx.font = '12px arial';
+  ctx.fillText('✕', mobileButtons[1][0] - 5, mobileButtons[1][1] + 5);
+  ctx.fillText('B', mobileButtons[2][0] - 5, mobileButtons[2][1] + 5);
+}
+
+function drawCharCard(id, x, y) {
+  ctx.strokeStyle = ships.filter(ship => ship.id === id)[0].col;
+  ctx.lineWidth = 4;
+  ctx.strokeRect(x, y, 100, 50);
+}
 
 function fireBullet(x, y, rot) {
   if (bullets.length > MAX_BULLETS) {
@@ -404,11 +437,11 @@ function addDmgObj(adversary) {
   let atk = ships.filter(ship => ship.id === adversary)[0];
   let dx = x - atk.x;
   let dy = y - atk.y;
-  if (dx > 0) {
-    console.log((Math.atan(atk.y - y / atk.x - x) * 180) / Math.PI);
-  } else {
-    console.log((Math.atan(atk.x - x / atk.y - y) * 180) / Math.PI);
-  }
+  // if (dx > 0) {
+  //   console.log((Math.atan(atk.y - y / atk.x - x) * 180) / Math.PI);
+  // } else {
+  //   console.log((Math.atan(atk.x - x / atk.y - y) * 180) / Math.PI);
+  // }
 
   if (atk !== undefined && atk !== NaN && atk !== null) {
     dmg.push({
@@ -449,7 +482,7 @@ server.on('acceptcon', data => {
   }
 
   ctx.fillStyle = 'rgba(0,0,0,0.8)';
-  ctx.fillRect(0, 0, canv.width, 50);
+  ctx.fillRect(0, 0, canv.width, portrait ? 50 : 150);
   ctx.fillStyle = 'green';
   ctx.fillText('Connected!', 25, 50);
 });
@@ -492,7 +525,7 @@ server.on('ships', data => {
 });
 
 server.on('bullets', data => {
-  otherBullets.push(data.filter(b => b.id !== id));
+  otherBullets = data.filter(b => b.id !== id);
 });
 
 server.on('resendplzty', () => {
@@ -524,28 +557,110 @@ server.on('dmg', attacker => {
 });
 
 server.on('bullets', data => (otherBullets = data.filter(d => d.id !== id)));
+if (portrait) {
+  window.addEventListener('touchstart', e => {
+    if (timer === null && id !== null && FPS !== null) {
+      server.emit('ack', {
+        id,
+        x,
+        y,
+        rot,
+        rotSpeed,
+        health,
+        shield,
+        boost,
+        col: SHIP_COLOUR
+      });
+      timer = setInterval(() => {
+        timerLoop();
+      }, 1000 / FPS);
+    }
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      for (let j = 0; j < mobileButtons.length; j++) {
+        if (
+          checkProx(
+            e.changedTouches[i].pageX,
+            e.changedTouches[i].pageY,
+            mobileButtons[j][0],
+            mobileButtons[j][1],
+            mobileButtons[j][2]
+          )
+        ) {
+          switch (j) {
+            case 0:
+              touchx = e.changedTouches[i].pageX - mobileButtons[j][0];
+              rotSpeed =
+                ((e.changedTouches[i].pageX - mobileButtons[0][0]) /
+                  mobileButtons[0][2]) *
+                2 *
+                Math.PI;
+              break;
+            case 1:
+              break;
+            case 2:
+              break;
+            default:
+              break;
+          }
+        }
+      }
+    }
+  });
 
-window.addEventListener('touchstart', e => {
-  console.log(e.changedTouches[0]);
-  if (timer === null && id !== null && FPS !== null) {
-    server.emit('ack', {
-      id,
-      x,
-      y,
-      rot,
-      rotSpeed,
-      health,
-      shield,
-      boost,
-      col: SHIP_COLOUR
-    });
-    timer = setInterval(() => {
-      timerLoop();
-    }, 1000 / FPS);
-    console.log('started');
-  }
-});
+  window.addEventListener('touchmove', e => {
+    if (touchx !== null) {
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        if (
+          checkProx(
+            e.changedTouches[i].pageX,
+            e.changedTouches[i].pageY,
+            mobileButtons[0][0],
+            mobileButtons[0][1],
+            mobileButtons[0][2]
+          )
+        ) {
+          touchx = e.changedTouches[i].pageX - mobileButtons[0][0];
+          rotSpeed =
+            ((e.changedTouches[i].pageX - mobileButtons[0][0]) /
+              mobileButtons[0][2]) *
+            2 *
+            Math.PI;
+        }
+      }
+    }
+  });
 
+  window.addEventListener('touchend', e => {
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      for (let j = 0; j < mobileButtons.length; j++) {
+        if (
+          checkProx(
+            e.changedTouches[i].pageX,
+            e.changedTouches[i].pageY,
+            mobileButtons[j][0],
+            mobileButtons[j][1],
+            mobileButtons[j][2]
+          )
+        ) {
+          switch (j) {
+            case 0:
+              touchx = null;
+              rotSpeed = 0;
+              break;
+            case 1:
+              fire = !fire;
+              break;
+            case 2:
+              boost = !boost;
+              break;
+            default:
+              break;
+          }
+        }
+      }
+    }
+  });
+}
 window.addEventListener('keydown', e => {
   switch (e.key) {
     case ' ':
