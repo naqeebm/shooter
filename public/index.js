@@ -24,7 +24,10 @@ let portrait = false;
 if (x < y) {
   portrait = true;
 }
-if (portrait) document.documentElement.requestFullscreen();
+if (portrait) {
+  document.documentElement.requestFullscreen();
+  document.documentElement.webkitRequestFullscreen();
+}
 
 let touchx = 0;
 let mobileButtons = [
