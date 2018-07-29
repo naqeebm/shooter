@@ -573,8 +573,9 @@ if (portrait) {
       } else if (docelem.msRequestFullscreen) {
         docelem.msRequestFullscreen();
       }
+      canv.height = window.innerHeight;
+      canv.width = window.innerWidth;
     }
-    canv.height = document.documentElement.innerHeight;
     if (timer === null && id !== null && FPS !== null) {
       server.emit('ack', {
         id,
