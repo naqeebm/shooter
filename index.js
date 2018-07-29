@@ -99,5 +99,6 @@ setInterval(() => {
 }, 1000 / FPS);
 
 setInterval(() => {
+  bullets = [];
   io.sockets.emit('ships', ships);
 }, 1000 / 2);
