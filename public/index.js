@@ -24,10 +24,6 @@ let portrait = false;
 if (x < y) {
   portrait = true;
 }
-if (portrait) {
-  document.documentElement.requestFullscreen();
-  document.documentElement.webkitRequestFullscreen();
-}
 
 let touchx = 0;
 let mobileButtons = [
@@ -564,6 +560,9 @@ server.on('dmg', attacker => {
 server.on('bullets', data => (otherBullets = data.filter(d => d.id !== id)));
 if (portrait) {
   window.addEventListener('touchstart', e => {
+    document.documentElement.requestFullscreen();
+    document.documentElement.webkitRequestFullscreen();
+    canv.height = document.documentElement.innerHeight;
     if (timer === null && id !== null && FPS !== null) {
       server.emit('ack', {
         id,
