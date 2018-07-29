@@ -560,8 +560,20 @@ server.on('dmg', attacker => {
 server.on('bullets', data => (otherBullets = data.filter(d => d.id !== id)));
 if (portrait) {
   window.addEventListener('touchstart', e => {
-    document.documentElement.requestFullscreen();
-    document.documentElement.webkitRequestFullscreen();
+    var conf = confirm('Fullscreen mode?');
+    var docelem = document.documentElement;
+
+    if (conf == true) {
+      if (docelem.requestFullscreen) {
+        docelem.requestFullscreen();
+      } else if (docelem.mozRequestFullScreen) {
+        docelem.mozRequestFullScreen();
+      } else if (docelem.webkitRequestFullscreen) {
+        docelem.webkitRequestFullscreen();
+      } else if (docelem.msRequestFullscreen) {
+        docelem.msRequestFullscreen();
+      }
+    }
     canv.height = document.documentElement.innerHeight;
     if (timer === null && id !== null && FPS !== null) {
       server.emit('ack', {
