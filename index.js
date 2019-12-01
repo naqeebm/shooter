@@ -1,15 +1,23 @@
 var express = require('express');
 var socket = require('socket.io');
+const https = require('https');
+const fs = require('fs');
+//const http = require('http');
 
 var app = express();
-var server = app.listen(8000, () => {
+const options = {
+  key: fs.readFileSync('/etc/letsencrypt/live/naqeeb.me/privkey.pem'),
+  cert: fs.readFileSync('/etc/letsencrypt/live/naqeeb.me/fullchain.pem')
+};
+const server = https.createServer(options, app);
+
+server.listen(8000, () => {
   console.log('listening on port 8000');
 });
 
 app.use(express.static(__dirname + '/public'));
 
-var io = socket(server);
-
+var io = socket(server)
 const FPS = 30;
 const MAPSIZE = 5000;
 
